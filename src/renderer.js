@@ -1,5 +1,3 @@
-// Buttons
-
 
 const { ipcRenderer } = require("electron");
 
@@ -28,6 +26,19 @@ window.addEventListener("DOMContentLoaded", () => {
         }
         document.getElementById("theimage").src = filePath
       });
-    
+
+
+      ipcRenderer.on("open-testdialog", () => {
+        const testdialog = document.getElementById("testdialog");
+        testdialog.show();
+      });
+
+      const closeButton = document.getElementById("testdialogclose");
+      closeButton.addEventListener("click", () => { 
+        const value = document.getElementById("testdialogentry").value;
+        alert("Value from testdialog: "+value);
+        testdialog.close();
+      });
+
 });
 

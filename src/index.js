@@ -5,6 +5,7 @@ const {
   dialog,
   Menu,
   globalShortcut,
+  top,
 } = require('electron');
 const path = require('path');
 const fs = require("fs");
@@ -29,6 +30,12 @@ app.whenReady().then(() => {
   })
   globalShortcut.register('CommandOrControl+L', () => {
     ipcMain.emit("load-image-triggered");
+  })
+  globalShortcut.register('CommandOrControl+T', () => {
+    ipcMain.emit("test-dialog-triggered");
+  })
+  globalShortcut.register('Shift+CommandOrControl+T', () => {
+    ipcMain.emit("test-dialog2-triggered");
   })
 });
 
@@ -91,6 +98,16 @@ const createWindow = () => {
           label: 'Load Image',
           accelerator: 'CommandOrControl+L',
           click: async () => ipcMain.emit("load-image-triggered"),
+        },
+        {
+          label: 'Test Dialog...',
+          accelerator: 'CommandOrControl+T',
+          click: async () => ipcMain.emit("test-dialog-triggered"),
+        },
+        {
+          label: 'Test Dialog 2...',
+          accelerator: 'Shift+CommandOrControl+T',
+          click: async () => ipcMain.emit("test-dialog2-triggered"),
         },
         isMac ? { role: 'close' } : { role: 'quit' }
       ]
@@ -268,3 +285,28 @@ const saveFile = (filePath, content) => {
 ipcMain.on("load-image-triggered", () => {
   mainWindow.webContents.send("load-image");
 });
+
+ipcMain.on("test-dialog-triggered", () => {
+  mainWindow.webContents.send("open-testdialog");
+});
+
+ipcMain.on("test-dialog2-triggered", () => {
+  const child = new BrowserWindow({ 
+    parent: top, 
+    width:350,
+    height:110,
+    resizable: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+      devTools: false,
+    },
+
+  })
+  child.loadFile('src/testdialog2.html')
+  child.removeMenu();
+  child.show()
+});
+
+
