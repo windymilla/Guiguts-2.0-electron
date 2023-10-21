@@ -4,9 +4,11 @@ const {
   ipcMain,
   dialog,
   Menu,
+  globalShortcut,
 } = require('electron');
 const path = require('path');
 const fs = require("fs");
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -14,6 +16,21 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow;
+
+app.whenReady().then(() => {
+  globalShortcut.register('CommandOrControl+O', () => {
+    ipcMain.emit("open-document-triggered");
+  })
+  globalShortcut.register('CommandOrControl+S', () => {
+    ipcMain.emit("save-document-triggered");
+  })
+  globalShortcut.register('Shift+CommandOrControl+S', () => {
+    ipcMain.emit("saveas-document-triggered");
+  })
+  globalShortcut.register('CommandOrControl+L', () => {
+    ipcMain.emit("load-image-triggered");
+  })
+});
 
 const createWindow = () => {
   // Create the browser window.
@@ -26,7 +43,7 @@ const createWindow = () => {
       contextIsolation: false,
       enableRemoteModule: true,
       titleBarStyle: "hiddenInset",
-      devTools: false,
+      // devTools: false,
     },
   });
 
@@ -55,16 +72,25 @@ const createWindow = () => {
       label: 'File',
       submenu: [
         {
-          label: 'Load...',
+          label: 'Open...',
+          accelerator: 'CommandOrControl+O',
           click: async () => ipcMain.emit("open-document-triggered"),
         },
         {
           label: 'Save',
+          accelerator: 'CommandOrControl+S',
           click: async () => ipcMain.emit("save-document-triggered"),
         },
         {
           label: 'Save As...',
+          accelerator: 'Shift+CommandOrControl+S',
           click: async () => ipcMain.emit("saveas-document-triggered"),
+        },
+        { type: 'separator' },
+        {
+          label: 'Load Image',
+          accelerator: 'CommandOrControl+L',
+          click: async () => ipcMain.emit("load-image-triggered"),
         },
         isMac ? { role: 'close' } : { role: 'quit' }
       ]
@@ -238,3 +264,7 @@ const saveFile = (filePath, content) => {
     }
   });
 };
+
+ipcMain.on("load-image-triggered", () => {
+  mainWindow.webContents.send("load-image");
+});
