@@ -6,6 +6,7 @@ const {
   Menu,
   globalShortcut,
   top,
+  Notification,
 } = require('electron');
 const path = require('path');
 const fs = require("fs");
@@ -36,6 +37,9 @@ app.whenReady().then(() => {
   })
   globalShortcut.register('Shift+CommandOrControl+T', () => {
     ipcMain.emit("test-dialog2-triggered");
+  })
+  globalShortcut.register('CommandOrControl+P', () => {
+    ipcMain.emit("spawn-process-triggered");
   })
 });
 
@@ -108,6 +112,12 @@ const createWindow = () => {
           label: 'Test Dialog 2...',
           accelerator: 'Shift+CommandOrControl+T',
           click: async () => ipcMain.emit("test-dialog2-triggered"),
+        },
+        { type: 'separator' },
+        {
+          label: 'Spawn process',
+          accelerator: 'CommandOrControl+P',
+          click: async () => ipcMain.emit("spawn-process-triggered"),
         },
         isMac ? { role: 'close' } : { role: 'quit' }
       ]
@@ -307,6 +317,15 @@ ipcMain.on("test-dialog2-triggered", () => {
   child.loadFile('src/testdialog2.html')
   child.removeMenu();
   child.show()
+});
+
+ipcMain.on("dialog2-value", (_, value) => {
+  dialog.showMessageBox( {title: 'Message box results', message: 'Value: '+value});
+  new Notification({ title: "Notification results", body: "Value is " + value }).show();
+});
+
+ipcMain.on("spawn-process-triggered", () => {
+  mainWindow.webContents.send("open-testdialog");
 });
 
 
