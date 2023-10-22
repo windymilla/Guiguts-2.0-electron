@@ -323,7 +323,12 @@ ipcMain.on("test-dialog2-triggered", () => {
 ipcMain.on("dialog2-value", (_, value) => {
   dialog.showMessageBox( {title: 'Message box results', message: 'Value: '+value});
   new Notification({ title: "Notification results", body: "Value is " + value }).show();
+  writeData('testdialog2value',value);
 });
+
+ipcMain.on('testdialog2-getvalue', (event, arg) => {
+  event.returnValue = readData('testdialog2value') ?? '';
+})
 
 ipcMain.on("spawn-process-triggered", () => {
   const p = fork(path.join(__dirname, 'child.js'), ['hello'], {
@@ -341,4 +346,24 @@ ipcMain.on("spawn-process-triggered", () => {
   p.send('Process file abc123.txt');
 });
 
+const configFilePath = path.join(app.getPath('userData'), 'config.json');
 
+function writeData(key, value){
+  let contents = parseData()
+  contents[key] = value;
+  fs.writeFileSync(configFilePath, JSON.stringify(contents));
+}
+
+function readData(key, value) {
+ let contents = parseData()
+ return contents[key]
+}
+
+function parseData(){
+  const defaultData = {}
+  try {
+   return JSON.parse(fs.readFileSync(configFilePath));
+ } catch(error) {
+   return defaultData;
+ }
+}
