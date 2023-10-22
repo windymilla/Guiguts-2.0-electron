@@ -10,6 +10,7 @@ const {
 } = require('electron');
 const path = require('path');
 const fs = require("fs");
+const {fork, spawn} = require('child_process');
 
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -325,7 +326,19 @@ ipcMain.on("dialog2-value", (_, value) => {
 });
 
 ipcMain.on("spawn-process-triggered", () => {
-  mainWindow.webContents.send("open-testdialog");
+  const p = fork(path.join(__dirname, 'child.js'), ['hello'], {
+    stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+  });
+  p.stdout.on('data', (d) => {
+    dialog.showMessageBox( {title: 'stdout from child process', message: d.toString()});
+  });
+  p.stderr.on('data', (d) => {
+    dialog.showMessageBox( {title: 'stderr from child process', message: d.toString()});
+  });
+  p.on('message', (m) => {
+    dialog.showMessageBox( {title: 'ipc message from child process', message: m.toString()});
+  });
+  p.send('Process file abc123.txt');
 });
 
 
